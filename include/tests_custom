@@ -1,0 +1,91 @@
+#!/bin/sh
+
+#
+# Test        : CUST-0010
+
+Register --test-no CUST-0010 --weight L --network NO --category custom --description "Get open TCP ports"
+if [ ${SKIPTEST} -eq 0 ]; then
+    Display --indent 2 --text "- Checking open TCP ports"
+    if command -v netstat 1>/dev/null; then
+        netstat -tlpn | tail -n +3 | awk '{print $1, $4, $7}' | while IFS='\n' read -r tcp_port; do
+            LogText "Open TCP port: ${tcp_port}"
+        done
+
+    else
+        echo LogText "Result: netstat not found, test skipped"
+    fi
+fi
+
+#################################################################################
+#
+# Test        : CUST-0011
+
+# Register --test-no CUST-0011 --weight L --network NO --category custom --description "Get open UDP ports"
+# if [ ${SKIPTEST} -eq 0 ]; then
+#     Display --indent 2 --text "- Checking open UDP ports"
+#     if command -v netstat 1>/dev/null; then
+#         udp_ports=$(netstat -tulpn | awk '/^udp / {print $4}' | awk -F: '{print $NF}' | tr '\n' ' ')
+#         LogText "Open UDP ports: ${udp_ports}"
+#     else
+#         echo LogText "Result: netstat not found, test skipped"
+#     fi
+# fi
+
+#################################################################################
+#
+# Test        : CUST-0012
+
+Register --test-no CUST-0012 --weight L --network NO --category custom --description "Get number of CPU cores"
+if [ ${SKIPTEST} -eq 0 ]; then
+    Display --indent 2 --text "- Checking number of CPU cores"
+    # if command -v lscpu 1>/dev/null; then
+    if command -v nproc 1>/dev/null; then
+        # cpu_cores=$(lscpu | grep "^CPU\(s\):" | sed -e "s/[^0-9]//g")
+        cpu_cores=$(nproc)
+        LogText "Number of CPU cores: ${cpu_cores}"
+    else
+        # echo LogText "Result: lscpu not found, test skipped"
+        echo LogText "Result: nproc not found, test skipped"
+    fi
+fi
+
+#################################################################################
+#
+# Test        : CUST-0013
+
+Register --test-no CUST-0013 --weight L --network NO --category custom --description "Get running Docker containers"
+if [ ${SKIPTEST} -eq 0 ]; then
+    Display --indent 2 --text "- Checking running Docker containers"
+    if command -v docker 1>/dev/null; then
+        docker ps --format "{{.Image}} {{.Names}}" | while IFS='\n' read -r docker_images; do
+            LogText "Running docker container: ${docker_images}"
+        done
+    else
+        echo LogText "Result: docker not found, test skipped"
+    fi
+fi
+
+#################################################################################
+#
+# Test        : CUST-0014
+
+Register --test-no CUST-0014 --weight L --network NO --category custom --description "Get custom binaries"
+if [ ${SKIPTEST} -eq 0 ]; then
+    Display --indent 2 --text "- Checking running custom binaries"
+    if command -v kubectl 1>/dev/null; then
+        kubectl_version=$(kubectl version 2>/dev/null | grep -oP "GitVersion:\"v([0-9.]+)\"" | grep -Po "([0-9.]+)")
+        LogText "Found custom binary: kubectl ${kubectl_version}"
+    fi
+    if command -v kubelet 1>/dev/null; then
+        kubelet_version=$(kubelet --version | grep -oP "([0-9.]+)")
+        LogText "Found custom binary: kubelet ${kubelet_version}"
+    fi
+    if command -v etcd 1>/dev/null; then
+        etcd_version=$(etcdctl version | head -n 1 | grep -oP "([0-9.]+)")
+        LogText "Found custom binary: etcd ${etcd_version}"
+    fi
+fi
+
+#
+#================================================================================
+# Lynis - Security Auditing and System Hardening for Linux and UNIX - https://cisofy.com
