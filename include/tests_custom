@@ -10,7 +10,6 @@ if [ ${SKIPTEST} -eq 0 ]; then
         netstat -tlpn | tail -n +3 | awk '{print $1, $4, $7}' | while IFS='\n' read -r tcp_port; do
             LogText "Open TCP port: ${tcp_port}"
         done
-
     else
         echo LogText "Result: netstat not found, test skipped"
     fi
@@ -38,14 +37,11 @@ fi
 Register --test-no CUST-0012 --weight L --network NO --category custom --description "Get number of CPU cores"
 if [ ${SKIPTEST} -eq 0 ]; then
     Display --indent 2 --text "- Checking number of CPU cores"
-    # if command -v lscpu 1>/dev/null; then
-    if command -v nproc 1>/dev/null; then
-        # cpu_cores=$(lscpu | grep "^CPU\(s\):" | sed -e "s/[^0-9]//g")
-        cpu_cores=$(nproc)
+    if command -v lscpu 1>/dev/null; then
+        cpu_cores=$(lscpu | grep -E "^CPU\(s\):" | sed -e "s/[^0-9]//g")
         LogText "Number of CPU cores: ${cpu_cores}"
     else
-        # echo LogText "Result: lscpu not found, test skipped"
-        echo LogText "Result: nproc not found, test skipped"
+        echo LogText "Result: lscpu not found, test skipped"
     fi
 fi
 
